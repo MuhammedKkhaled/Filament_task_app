@@ -9,17 +9,20 @@ use Filament\Tables\Table;
 use App\Models\PurchaseOrder;
 use Filament\Resources\Resource;
 use App\Enums\PurchaseOrderStatus;
+use Filament\Tables\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
+use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Columns\BadgeColumn;
+use Filament\Tables\Actions\DeleteAction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\PurchaseOrderResource\Pages;
 use App\Filament\Resources\PurchaseOrderResource\RelationManagers;
 use App\Filament\Resources\PurchaseOrderResource\RelationManagers\ItemsRelationManager;
-use Filament\Tables\Actions\ActionGroup;
-use Filament\Tables\Actions\DeleteAction;
+
+use function PHPUnit\Framework\returnSelf;
 
 class PurchaseOrderResource extends Resource
 {
@@ -89,11 +92,10 @@ class PurchaseOrderResource extends Resource
                     ->sortable(),
                 BadgeColumn::make('status')
                     ->getStateUsing(function ($record) {
-
                         if ($record->status === PurchaseOrderStatus::PENDING->value) {
                             return PurchaseOrderStatus::PENDING->value;
                         }
-                        return PurchaseOrderStatus::PENDING->value;
+                        return PurchaseOrderStatus::COMPLETED->value;
                     })
                     ->colors([
                         'danger' => PurchaseOrderStatus::PENDING->value,
@@ -105,6 +107,30 @@ class PurchaseOrderResource extends Resource
             ])
             ->actions([
                 ActionGroup::make([
+                    Action::make('receiveStock')
+                        ->label('Receive Stock')
+                        ->icon('heroicon-o-truck')
+                        ->requiresConfirmation()
+                        ->action(function (PurchaseOrder $record) {
+
+                            // Iterate through the purchase order items
+                            foreach ($record->items as $item) {
+                                // Find the product
+                                $product = $item->product;
+
+                                // Update the product's stock quantity
+                                $product->stock_quantity += $item->quantity;
+                                $product->save();
+                            }
+
+                            // Mark the purchase order as completed
+                            $record->status = PurchaseOrderStatus::COMPLETED->value;
+                            $record->save();
+                        })
+                        ->visible(function (PurchaseOrder $record) {
+                            return $record->status === PurchaseOrderStatus::PENDING->value;
+                        }),
+
                     DeleteAction::make(),
                     Tables\Actions\EditAction::make(),
                 ]),

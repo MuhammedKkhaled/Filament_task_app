@@ -4,6 +4,6 @@ namespace App\Enums;
 
 enum PurchaseOrderStatus: string
 {
-    case PENDING = 'pending';
-    case COMPLETED = 'completed';
+    case PENDING = 'Pending';
+    case COMPLETED = 'Completed';
 }
