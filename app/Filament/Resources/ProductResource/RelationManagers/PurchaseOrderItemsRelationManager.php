@@ -2,18 +2,16 @@
 
 namespace App\Filament\Resources\ProductResource\RelationManagers;
 
-use Filament\Forms;
 use Filament\Tables;
+use App\Models\Product;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use App\Models\PurchaseOrder;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Actions\ActionGroup;
+use Filament\Resources\RelationManagers\RelationManager;
 
 class PurchaseOrderItemsRelationManager extends RelationManager
 {
@@ -35,7 +33,25 @@ class PurchaseOrderItemsRelationManager extends RelationManager
                 TextInput::make('quantity')
                     ->numeric()
                     ->minValue(1)
-                    ->rules(['required', 'min:1', 'max:200'])
+                    ->rules([
+                        'required',
+                        'min:1',
+                        'max:200',
+                        'required',
+                        'min:1',
+                        'max:200',
+                        function ($get) {
+                            return function ($attribute, $value, $fail) use ($get) {
+                                $productId = $this->ownerRecord->id;
+                                if ($productId) {
+                                    $product = Product::find($productId);
+                                    if ($value > $product->stock_quantity) {
+                                        $fail("The quantity cannot exceed available stock ({$product->stock_quantity}).");
+                                    }
+                                }
+                            };
+                        }
+                    ])
                     ->required(),
                 TextInput::make('price')
                     ->numeric()
