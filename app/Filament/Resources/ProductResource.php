@@ -18,6 +18,7 @@ use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Filters\SelectFilter;
 use App\Filament\Resources\ProductResource\Pages;
+use App\Filament\Resources\ProductResource\RelationManagers\PurchaseOrderItemsRelationManager;
 
 class ProductResource extends Resource
 {
@@ -147,7 +148,7 @@ class ProductResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            PurchaseOrderItemsRelationManager::class,
         ];
     }
 
