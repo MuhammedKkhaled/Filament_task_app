@@ -7,18 +7,19 @@ use Filament\Tables;
 use App\Models\Supplier;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Faker\Provider\ar_EG\Text;
 use Illuminate\Validation\Rule;
 use Filament\Resources\Resource;
+use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\TextInput;
+use Filament\Tables\Actions\ActionGroup;
+use Filament\Tables\Actions\DeleteAction;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\SupplierResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\SupplierResource\RelationManagers;
-use Faker\Provider\ar_EG\Text;
-use Filament\Tables\Actions\ActionGroup;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Columns\TextColumn;
+use App\Filament\Resources\SupplierResource\RelationManagers\PurchaseOrdersRelationManager;
 
 class SupplierResource extends Resource
 {
@@ -112,7 +113,7 @@ class SupplierResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            PurchaseOrdersRelationManager::class,
         ];
     }
 
