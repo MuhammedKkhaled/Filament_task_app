@@ -13,16 +13,17 @@ use Filament\Tables\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Actions\DeleteAction;
 use Illuminate\Database\Eloquent\Builder;
+use function PHPUnit\Framework\returnSelf;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\PurchaseOrderResource\Pages;
+
 use App\Filament\Resources\PurchaseOrderResource\RelationManagers;
 use App\Filament\Resources\PurchaseOrderResource\RelationManagers\ItemsRelationManager;
-
-use function PHPUnit\Framework\returnSelf;
 
 class PurchaseOrderResource extends Resource
 {
@@ -112,8 +113,17 @@ class PurchaseOrderResource extends Resource
                         ->icon('heroicon-o-truck')
                         ->requiresConfirmation()
                         ->action(function (PurchaseOrder $record) {
+                            // Check if purchase order has items
+                            if ($record->items->isEmpty()) {
+                                Notification::make()
+                                    ->title('No Items Found')
+                                    ->body('This purchase order has no items to process.')
+                                    ->danger()
+                                    ->send();
+                                return;
+                            }
 
-                            // Iterate through the purchase order items
+                           // Iterate through the purchase order items
                             foreach ($record->items as $item) {
                                 // Find the product
                                 $product = $item->product;
@@ -126,6 +136,12 @@ class PurchaseOrderResource extends Resource
                             // Mark the purchase order as completed
                             $record->status = PurchaseOrderStatus::COMPLETED->value;
                             $record->save();
+
+                            Notification::make()
+                                ->title('Stock Received')
+                                ->description('Purchase order items have been added to stock.')
+                                ->success()
+                                ->send();
                         })
                         ->visible(function (PurchaseOrder $record) {
                             return $record->status === PurchaseOrderStatus::PENDING->value;
